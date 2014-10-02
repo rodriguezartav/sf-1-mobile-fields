@@ -1,0 +1,14 @@
+<div class="sliding-view">
+
+	<div class="section-header section-header__big">
+		<div class="section-title section-title__big">SF1 Mobile Fields by Clay</div>
+		<a class="btn btn-default section-btn section-btn__right js_btn_info">i</a>
+	</div>
+
+	<div class="section-header">
+		<div class="section-title">What do you want to see?</div>	
+	</div>
+	
+	<ul id="list" class="list-group"></ul>
+
+</div>

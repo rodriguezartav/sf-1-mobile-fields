@@ -1,0 +1,117 @@
+/* General and Reset */
+ul li{
+  margin-left: 0px;
+  cursor: pointer;
+}
+
+._3vot{
+  overflow-x: hidden;
+}
+
+.blue{
+  color: #107abb;
+}
+
+
+
+
+/* Components */
+
+/* Slide Container */
+.slide-container{
+  padding: 10px;
+}
+
+
+
+
+/* Section Header */
+.section-header{
+  padding: 8px;
+  position: relative;
+}
+
+  .section-header__big{
+    border-bottom: 1px solid #efefef;
+    padding: 11px;
+    padding-top: 9px;
+    margin-bottom: 4px;
+  }
+
+
+
+
+/* Section Labels */
+.section-title{
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 1.1px;
+  color: #107abb;
+}
+
+  .section-title__big{
+    font-size: 13px;
+    color: #107abb;
+    line-height: 33px;
+  }
+
+
+
+
+
+/* Section Buttons */
+.section-btn{}
+
+  .section-btn__right{
+    position: absolute;
+    top: 0px;
+    right: 10px;
+  }
+
+
+
+
+
+/* List Group and Items */
+.list-group{}
+
+  .list-group-item{
+    background-color: #fefefe !important;
+    cursor: pointer;
+  }
+
+    .list-item__single{
+      font-weight: bold;
+    }
+
+    .list-group-item-title{
+      color: #333;
+      font-size: 14px;
+      font-weight: 100;
+    }
+
+
+
+
+/* Detail View */
+.detail-view{
+  margin-top: 8px;
+}
+
+  .detail-view-item__title{}
+
+  .detail-view-item__value{
+    font-weight: 100;
+    margin-bottom: 8px;
+  }
+
+  .detail-view-item__link{
+    cursor: pointer;
+    font-weight: 100;
+    color: #107abb;
+    margin-bottom: 8px;
+  }
+
+  .detail-view-buttons{
+    padding: 5px;
+  }

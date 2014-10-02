@@ -1,0 +1,38 @@
+<apex:page sidebar="false" showHeader="false" controller="threevot_apps.sfafields">
+
+	<c:ThreeVotComponent ></c:ThreeVotComponent>
+
+	<head>
+		<!-- Meta, title, CSS, favicons, etc. -->
+		<meta charset="utf-8"></meta>
+		<meta http-equiv="X-UA-Compatible" content="IE=edge"></meta>
+		<meta name="viewport" content="width=device-width, initial-scale=1"></meta>
+
+		<!-- Bootstrap core CSS -->
+		<link rel="stylesheet" type="text/css" href="//s3.amazonaws.com/dist.3vot.com/bootstrap.css" />
+
+		<link rel="stylesheet" type="text/css" href="{3vot}/css/style.css" />
+
+	</head>
+
+  
+	<div id="_3vot_sf1fields" class=" _3vot" >
+
+		<div id="app-container" class="main slide-container">
+
+		</div>
+
+	</div>
+
+	<script>	
+		window.threevot = threevot_apps;
+
+		var _3vot = {};
+		_3vot.user_profile = "{!$Profile.id}";
+
+	</script>
+
+	<script type="text/javascript" src="{3vot}/index.js"></script>
+
+</apex:page>
+
