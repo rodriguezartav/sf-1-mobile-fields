@@ -1,6 +1,3 @@
-//List View Result
-//Fetches and 
-
 var _3Model = require("3vot-model/lib/ajaxless")
 
 ListViewResults = _3Model.Model.setup("ListViewResults", ["id","label"]);

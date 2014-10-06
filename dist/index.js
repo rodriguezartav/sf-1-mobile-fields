@@ -1,182 +1,4 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
-var domify = require('domify');
-
-//Models
-var Sf1Fields = require("../../models/sf1fields");
-var ListView = require("../../models/listView");
-var DynamicModel = require("../../models/dynamicModel");
-var ListViewResults = require("../../models/listViewResults");
-
-//Views
-var Layout = require("./views/layout")
-var Item = require("./views/item")
-var ListViewItem = require("./views/listViewItem")
-var Detail = require("./views/detail")
-var Loading = require("./views/loading")
-var NotFound = require("./views/notfound")
-
-//Constructor
-var ItemList = function(){
-	var that = this;
-	this.models = {}
-	this.el = domify( Layout() );
-	
-	this.defineElements();
-	this.defineEventHandlers();
-	this.defineModelBindings();
-}
-
-//Defines the Elements to be used in controller
-ItemList.prototype.defineElements = function(){
-	this.txtSearch = this.el.querySelector("#txtSearch");
-	this.btnViews = this.el.querySelector("#btnViews");
-	this.backBtn= this.el.querySelector(".btn-back")
-
-	this.ul = this.el.querySelector("#itemList");
-	this.ulListViews = this.el.querySelector("#viewList");
-	this.itemListTitle = this.el.querySelector("#itemListTitle");
-	this.predefinedViews = this.el.querySelector("#predefinedViews");
-}
-
-//Define all Event Handlers
-//Favoring Global Handlers
-ItemList.prototype.defineEventHandlers = function(){
-	var that = this;
-	this.btnViews.onclick = function(e){ that.toggleViews(e); }
-	this.ul.onclick = function(e){ that.onItemClick(e); }
-	this.ulListViews.onclick = function(e){ that.onListViewClick(e); }
-	this.txtSearch.onchange = function(e){ that.onInputSearch(e); }
-	this.backBtn.onclick = function(){ Sf1Fields.trigger("BACK_SELECTED"); }
-}
-
-//Bind Models to Data Responders
-ItemList.prototype.defineModelBindings = function(){
-	var that = this;
-	ListViewResults.bind("refresh",function(){ that.render( ListViewResults.all() ); })
-	ListView.bind("refresh", function(){ that.renderViews(); });
-	ListView.bind("refresh", function(){ that.renderViews(); });
-}
-
-//Renders Views
-// CALLED FROM ListView REFRESH event
-ItemList.prototype.renderViews = function(){
-	this.ulListViews.innerHTML = ""
-	var src = ""
-	var views = ListView.all(	);
-	for (var i = views.length - 1; i >= 0; i--) {
-		var view = views[i];
-		src += ListViewItem(view);
-	};
-	this.ulListViews.innerHTML = src;
-}
-
-//Renders Items
-// CALLED FROM this.model REFRESH event
-ItemList.prototype.render = function(results){
-	this.ul.innerHTML = "";
-	var items = results || this.model.all();
-	var mainField = this.model.getMainField();
-	if(items.length == 0 ) return this.ul.innerHTML+= NotFound();
-
-	for (var i = items.length - 1; i >= 0; i--) {
-		var item = items[i];
-		item.sf1fields_mainField = mainField;
-		this.ul.innerHTML+= Item(item);
-	};
-}
-
-
-//Global Click Handler for List
-ItemList.prototype.onItemClick = function(e){
-	var target  = e.target;
-	if(target.classList.contains("btn-view-id")) return this.onViewDetailClick(e);
-
-	//Loop DOM until the correct element is found, in case of child items
-
-	while( target.classList.contains("list-item") == false ) target = target.parentNode;
-	
-	this.renderItem(target);
-}
-
-//Global Click Handler Helper for More Detail Click
-ItemList.prototype.onViewDetailClick = function(e){
-	return sforce.one.navigateToSObject( e.target.dataset.id );
-}
-
-//Global Click Handler Helper for Show more Deails
-ItemList.prototype.renderItem = function(itemElement){
-	var listElement = itemElement.parentNode;
-	
-	//Check and Toggle
-	var detailView = listElement.querySelector(".detail-view") 
-	if( detailView ) return listElement.removeChild(detailView);
-
-	//Render Detail View
-	var id = itemElement.dataset.id;
-	var item = this.model.find(id);
-	item.sf1fields_mainField = this.model.getMainField();
-	var renderValues = {model: this.model, item: item } ;
-	listElement.appendChild( domify( Detail( renderValues ) ) );
-}
-
-//Click Handlered for ListView List. The predefined lists
-ItemList.prototype.onListViewClick = function(e){
-	var target  = e.target;
-	var id = e.target.dataset.id;
-	this.ul.innerHTML = Loading();
-	this.itemListTitle.innerHTML = ListView.find(id).label;
-	this.toggleViews(null,true);
-	this.model.getRecords( this.objectName, this.fieldNames.join(","), id );
-}
-
-//ON Change Handler for Text Input, search.
-ItemList.prototype.onInputSearch = function(e){
-	this.ul.innerHTML = Loading();
-	var target  = e.target;
-	this.model.runquery( "name", target.value );
-}
-
-//Function and Click Handler for Header Toggle Button to show/hide List Views
-ItemList.prototype.toggleViews= function(e, hide){
-	if(hide== false){
-		this.btnViews.classList.remove("btn-primary")
-		this.predefinedViews.style.display = "none";	
-	}
-	else if( hide == true || e.target.classList.contains("btn-primary") ){
-			this.btnViews.classList.remove("btn-primary")
-			this.predefinedViews.style.display = "none";
-	}
-	else{
-		this.btnViews.classList.add("btn-primary")
-		this.predefinedViews.style.display = "block";
-	}
-}
-
-//Function used to Load a new Dynamic Model
-//It's a constructor in a way that re-shapes the whole UI
-ItemList.prototype.setupModel = function(objectName){
-	var that = this;
-
-	this.objectName = objectName;
-	this.objectFields  = Sf1Fields.getFields(this.objectName);
-	this.fieldNames = Sf1Fields.fieldsToNames(this.objectFields);
-
-	ListView.getViews(this.objectName);
-	this.itemListTitle.innerHTML = this.objectName;
-	this.ul.innerHTML = Loading();
-	this.ulListViews.innerHTML = Loading();
-
-	if( this.models[this.objectName] ) return this.model = this.models[this.objectName];
-
-	this.model = new DynamicModel(objectName,this.objectFields, this.fieldNames);
-
-	this.models[this.objectName] = this.model;
-
-	this.model.bind("refresh", function(){ that.render(); });
-}
-
-module.exports = ItemList;
-},{"../../models/dynamicModel":11,"../../models/listView":12,"../../models/listViewResults":13,"../../models/sf1fields":14,"./views/detail":2,"./views/item":3,"./views/layout":4,"./views/listViewItem":5,"./views/loading":6,"./views/notfound":7,"domify":35}],2:[function(require,module,exports){
 module.exports = function(__obj) {
   if (!__obj) __obj = {};
   var __out = [], __capture = function(callback) {
@@ -218,37 +40,27 @@ module.exports = function(__obj) {
     (function() {
       var key, _i, _len, _ref;
     
-      __out.push('<div class="detail-view">\n\t\n\t');
+      __out.push('<div class="detail-view">\n\n\t<ul class="list-group sf1NestedList">\n\n\t');
     
       _ref = this.model.fieldNames;
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         key = _ref[_i];
-        __out.push('\n\t\t');
-        if (key !== this.item.sf1fields_mainField) {
-          __out.push('\n\t\t<div class="detail-view-item row">\n\t\n\t\t\t\t\t<span class="detail-view-item__title col-xs-4">');
-          __out.push(__sanitize(key));
-          __out.push('</span>\n\t\t\t\n\t\t\t\t\t');
-          if (key.slice(-2) === "Id" && this.item[key] && this.item[key].length === 18) {
-            __out.push('\n\t\t\t\t\t\t<span class="detail-view-item__link col-xs-8">\n\t\t\t\t\t\t\t <span class=" btn-view-id" data-id=');
-            __out.push(__sanitize(this.item[key]));
-            __out.push('>: View ');
-            __out.push(__sanitize(key.slice(0, -2)));
-            __out.push(' in SF1 </span>\n\t\t\t\t\t\t</span>\n\t\t\t\t\n\t\t\t\t\t');
-          } else {
-            __out.push('\n\t\t\t\t\t\t<span class="detail-view-item__value col-xs-8">: ');
-            __out.push(__sanitize(this.item[key]));
-            __out.push('</span>\n\t\t\t\t\t');
-          }
-          __out.push('\n\t\t\t</div>\n\t\t');
+        __out.push('\n\n\t\t<li class="list-group-item field list-group-item ">\n\t\t\t<div class="title">');
+        __out.push(__sanitize(key));
+        __out.push('</div>\n\t\t\t\t');
+        if (key.slice(-2) === "Id" && this.item[key] && this.item[key].length === 18) {
+          __out.push('\n\t\t\t\t\t<a class="value btn-view-id sf1button" data-id=');
+          __out.push(__sanitize(this.item[key]));
+          __out.push('> Click for Details </a>\n\t\t\t\t');
+        } else {
+          __out.push('\n\t\t\t\t<div class="value">');
+          __out.push(__sanitize(this.item[key]));
+          __out.push('</div>\n\t\t\t\t');
         }
-        __out.push('\n\t');
+        __out.push('\n\t\t</li>\n\n\t');
       }
     
-      __out.push('\n\n\t<div class="detail-view-buttons">\n\t\t<a class="btn btn-primary btn-sm btn-view-id" data-id=');
-    
-      __out.push(__sanitize(this.item["id"]));
-    
-      __out.push('> View in SF1 </a>\n\t</div>\n\n</div>');
+      __out.push('\n\n\t</ul>\n\n</div>');
     
     }).call(this);
     
@@ -256,7 +68,174 @@ module.exports = function(__obj) {
   __obj.safe = __objSafe, __obj.escape = __escape;
   return __out.join('');
 }
-},{}],3:[function(require,module,exports){
+},{}],2:[function(require,module,exports){
+var Layout = require("./view")
+var Item = require("./item")
+var ListViewItem = require("./listViewItem")
+
+var Detail = require("./detail")
+var Loading = require("./loading")
+var NotFound = require("./notfound")
+
+var Sf1Fields = require("../../models/sf1fields");
+var ListView = require("../../models/listView");
+var ListViewResults = require("../../models/listViewResults");
+
+var domify = require('domify');
+
+var _3Model = require("3vot-model")
+
+var ItemList = function(){
+	var that = this;
+	this.models = {}
+	
+	this.el = domify( Layout() );
+	
+	this.ul = this.el.querySelector(".list-items");
+	this.ulListViews = this.el.querySelector(".list-views");
+	this.search = this.el.querySelector("input");
+	this.label = this.el.querySelector(".label");
+
+	this.ul.onclick = function(e){
+		that.onItemClick(e);
+	}
+
+	this.ulListViews.onclick = function(e){
+		that.onListViewClick(e);
+	}
+
+
+	this.search.onchange = function(e){
+		that.onSearch(e);
+	}
+
+	this.el.querySelector(".btn-back").onclick = function(){
+		Sf1Fields.trigger("BACK_SELECTED");
+	}
+
+	ListViewResults.bind("refresh",function(){
+		that.render( ListViewResults.all() );
+	})
+
+	ListView.bind("refresh", function(){
+		that.ulListViews.innerHTML = ""
+		var src = ""
+		var views = ListView.all();
+		for (var i = views.length - 1; i >= 0; i--) {
+			var view = views[i];
+			src += ListViewItem(view);
+		};
+		that.ulListViews.innerHTML = src;
+	})
+}
+
+ItemList.prototype.setupModel = function(objectName){
+	var that = this;
+
+	this.objectName = objectName;
+	this.objectFields  = Sf1Fields.getFields(this.objectName);
+	this.fieldNames = Sf1Fields.fieldsToNames(this.objectFields);
+
+	ListView.getViews(this.objectName);
+
+	this.label.innerHTML = this.objectName;
+
+	this.ul.innerHTML = Loading();
+	this.ulListViews.innerHTML = Loading();
+
+	if( this.models[this.objectName] ) return this.model = this.models[this.objectName];
+
+	this.model = _3Model.Model.setup(this.objectName, this.fieldNames.join(",")  );
+
+	this.model.objectName = this.objectName;
+	this.model.objectFields = this.objectFields;
+	this.model.fieldNames = this.fieldNames;
+
+	this.models[this.objectName] = this.model;
+
+	this.model.bind("refresh", function(){ that.render(); });
+
+	this.model.getRecords = function(objectName, fields, viewId){
+
+		Visualforce.remoting.Manager.invokeAction(
+	    'threevot_apps.sfafields.ListViewRecords',
+	    objectName,
+	    fields,
+	    viewId,
+	    handleResult,
+	    { buffer: false, escape: false, timeout: 30000 }
+		);
+
+		function handleResult(result, event){
+			that.model.destroyAll({ajax: false});
+			that.model.refresh(result);
+	 	} 
+	}
+}
+
+ItemList.prototype.query = function(type, value){
+	this.model.destroyAll({ ajax: false});
+	if(!type) return this.model.query("select " + this.fieldNames.join(",") + " from " + this.objectName + " order by LastViewedDate limit 10" );
+	var where = " where Name LIKE '%25" + value + "%25'"
+	this.model.query("select " + this.fieldNames.join(",") + " from " + this.objectName + where );
+}
+
+
+ItemList.prototype.render = function(results){
+	this.ul.innerHTML = "";
+	var items = results || this.model.all();
+	var mainField = this.getMainField();
+	if(items.length == 0 ) return this.ul.innerHTML+= NotFound();
+
+	for (var i = items.length - 1; i >= 0; i--) {
+		var item = items[i];
+		item.sf1fields_mainField = mainField;
+		this.ul.innerHTML+= Item(item);
+	};
+}
+
+ItemList.prototype.getMainField = function(){
+	if( this.fieldNames.indexOf("Name") > -1) return "Name";
+	for (var i = 0; i < this.fieldNames.length; i++) {
+		var fieldName = this.fieldNames[i];
+		if(fieldName != "id" && fieldName != "Id") return fieldName;
+	};
+	return "id";
+}
+
+ItemList.prototype.onItemClick = function(e){
+	var target  = e.target;
+	if(target.classList.contains("btn-view-id")) return sforce.one.navigateToSObject( target.dataset.id );
+
+	while(target.classList.contains("list-item") == false) target = target.parentNode;
+
+	// if( target.querySelector(".detail-view") ) return false;
+
+	//Check and Toggle
+	var detailView = target.querySelector(".detail-view"); 
+	if( detailView ) return target.removeChild(detailView);
+	
+	var id = e.target.dataset.id;
+	var item = this.model.find(id);
+	var renderValues = {model: this.model, item: item } ;
+
+	target.appendChild( domify( Detail( renderValues ) ) );
+}
+
+ItemList.prototype.onListViewClick = function(e){
+	var target  = e.target;
+	var id = e.target.dataset.id;
+	this.model.getRecords( this.objectName, this.fieldNames.join(","), id );
+}
+
+ItemList.prototype.onSearch = function(e){
+	this.ul.innerHTML = Loading();
+	var target  = e.target;
+	this.query( "name", target.value );
+}
+
+module.exports = ItemList;
+},{"../../models/listView":11,"../../models/listViewResults":12,"../../models/sf1fields":13,"./detail":1,"./item":3,"./listViewItem":4,"./loading":5,"./notfound":6,"./view":7,"3vot-model":26,"domify":34}],3:[function(require,module,exports){
 module.exports = function(__obj) {
   if (!__obj) __obj = {};
   var __out = [], __capture = function(callback) {
@@ -296,19 +275,19 @@ module.exports = function(__obj) {
   }
   (function() {
     (function() {
-      __out.push('<li  class="list-group-item  list-item__single" data-id="');
+      __out.push('<li data-id="');
     
       __out.push(__sanitize(this.id));
     
-      __out.push('">\n\t<div data-id="');
+      __out.push('" class="list-group-item list-item sf1button " data-id="');
     
       __out.push(__sanitize(this.id));
     
-      __out.push('" class="list-item list-group-item-title">\n\t\t');
+      __out.push('">\n\t<span class="icon icon-arrow-down"></span> ');
     
       __out.push(__sanitize(this[this.sf1fields_mainField]));
     
-      __out.push('\n\t</div>\n</li>');
+      __out.push(' \n</li>');
     
     }).call(this);
     
@@ -356,7 +335,15 @@ module.exports = function(__obj) {
   }
   (function() {
     (function() {
-      __out.push('<div class="sliding-view">\n\n\t<div class="section-header section-header__big row">\n\t\t<a class="btn btn-default btn-back section-btn col-xs-1"><</a>\n\t\t<div class="section-title col-xs-4 section-title__big">SF1 by Clay</div>\n\t\t<div class="form-wrapper col-xs-5">\n\t\t\t<input class="form-control" id="txtSearch" type="text"/>\n\t\t</div>\n\t\t<a class="btn btn-options section-btn btn-default btn-primary col-xs-1 pull-right" id="btnViews">V</a>\n\t</div>\n\n\n\t<div id="predefinedViews">\n\t\t<div class="section-header">\n\t\t\t<div class="section-title">Predefined Views</div>\t\n\t\t</div>\n\t\n\n\t\t<ul id="viewList" class="list-group list-group-simple"></ul>\n\n\t</div>\n\n\t<div class="section-header">\n\t\t<div id="itemListTitle" class="section-title">Recently Viewed</div>\t\n\t</div>\t\t\n\t\n\t<ul id="itemList" class="list-group"></ul>\n\t\n</div>');
+      __out.push('<li data-id="');
+    
+      __out.push(__sanitize(this.id));
+    
+      __out.push('" class="list-group-item list-view-item sf1button SFBlue" >\n\t');
+    
+      __out.push(__sanitize(this.label));
+    
+      __out.push('\n</li>');
     
     }).call(this);
     
@@ -404,15 +391,7 @@ module.exports = function(__obj) {
   }
   (function() {
     (function() {
-      __out.push('<li data-id="');
-    
-      __out.push(__sanitize(this.id));
-    
-      __out.push('" class="list-group-item list-view-item" >\n\t');
-    
-      __out.push(__sanitize(this.label));
-    
-      __out.push('\n</li>');
+      __out.push('<li class="list-group-item sf1List">loading... please wait</li>');
     
     }).call(this);
     
@@ -460,7 +439,7 @@ module.exports = function(__obj) {
   }
   (function() {
     (function() {
-      __out.push('<li class="list-group-item ">loading... please wait</li>');
+      __out.push('<li class="list-group-item sf1List">Sorry, No results found</li>');
     
     }).call(this);
     
@@ -508,7 +487,7 @@ module.exports = function(__obj) {
   }
   (function() {
     (function() {
-      __out.push('<li class="list-group-item ">sorry, no results found</li>');
+      __out.push('<div class="list-view sliding-view">\n\t\n\t<div class="header">\n\t\t<a class="btn-back sf1button SFBlue col-md-2 col-sm-2 col-xs-2"><span class="icon icon-back"></span></a>\n\t\t<div class="form-wrapper col-sm-10 col-md-10 col-xs-10"><input class="form-control " type="text" placeholder="Search for..."/></div>\n\t\t<!-- <a class="btn-options sf1button">|||</a> -->\n\t</div>\n\t<div class="clearfix"></div>\n\n\t<div class="list">\n\t\t<label> <span class="icon icon-sort"></span> Lists</label>\n\t\t<ul class="list-group list-views col-md-12 col-sm-12 col-xs-12"></ul>\n\t\t<div class="clearfix"></div>\n\t</div>\n\n\t\t\n\t<div class="list ">\n\t\t<label class="label"></label>\n\t\t<ul class="list-group list-items"></ul>\n\t</div>\n\n\t<div class="footer">\n\t\t<div class="logo"></div>\n\t</div>\n\n</div>');
     
     }).call(this);
     
@@ -517,21 +496,19 @@ module.exports = function(__obj) {
   return __out.join('');
 }
 },{}],8:[function(require,module,exports){
-var domify = require('domify');
-
-//Models
-var Sf1Fields = require("../../models/sf1fields");
-
-//Vies
 var Layout = require("./view")
 var Item = require("./item")
 
-//Constructor
+var Sf1Fields = require("../../models/sf1fields");
+
+var domify = require('domify');
+
 var ObjectList = function(){
+
 	var that = this;
 	this.el = domify( Layout() );
 	
-	this.ul = this.el.querySelector("#list");
+	this.ul = this.el.querySelector("ul");
 	this.ul.onclick = function(e){
 		that.onItemClick(e);
 	}
@@ -554,7 +531,7 @@ ObjectList.prototype.onItemClick = function(e){
 module.exports = ObjectList;
 
 
-},{"../../models/sf1fields":14,"./item":9,"./view":10,"domify":35}],9:[function(require,module,exports){
+},{"../../models/sf1fields":13,"./item":9,"./view":10,"domify":34}],9:[function(require,module,exports){
 module.exports = function(__obj) {
   if (!__obj) __obj = {};
   var __out = [], __capture = function(callback) {
@@ -594,15 +571,15 @@ module.exports = function(__obj) {
   }
   (function() {
     (function() {
-      __out.push('<li class="list-group-item list-group-item-title" data-name="');
+      __out.push('<div class="sf1button large" data-name="');
     
       __out.push(__sanitize(this));
     
-      __out.push('">');
+      __out.push('"> <span class="icon icon-arrow-right"></span> ');
     
       __out.push(__sanitize(this));
     
-      __out.push('</li>');
+      __out.push('</div>');
     
     }).call(this);
     
@@ -650,7 +627,7 @@ module.exports = function(__obj) {
   }
   (function() {
     (function() {
-      __out.push('<div class="sliding-view">\n\n\t<div class="section-header section-header__big">\n\t\t<div class="section-title section-title__big">SF1 Mobile Fields by Clay</div>\n\t\t<a class="btn btn-default section-btn section-btn__right js_btn_info">i</a>\n\t</div>\n\n\t<div class="section-header">\n\t\t<div class="section-title">What do you want to see?</div>\t\n\t</div>\n\t\n\t<ul id="list" class="list-group"></ul>\n\n</div>');
+      __out.push('<div class="list-view sliding-view">\n\t<div class="">\n\t\t<ul class="list-group col-md-12 col-sm-12 col-xs-12"></ul>\n\t</div>\n</div>');
     
     }).call(this);
     
@@ -659,77 +636,10 @@ module.exports = function(__obj) {
   return __out.join('');
 }
 },{}],11:[function(require,module,exports){
-//Dynamic Model
-//Used to create models *dynamically* , sorry...
-
-
-var _3Model = require("3vot-model")
-
-//Receives a Name that must match SFDC API, a list of object fields and a list of fields
-function DynamicModel(objectName, objectFields, fieldNames){
-	var that = this;
-
-	this.objectName = objectName;
-	this.objectFields = objectFields;
-	this.fieldNames = fieldNames;
-	
-	//Create Model Dynamically
-	this.model = _3Model.Model.setup(this.objectName, this.fieldNames.join(",")  );
-
-	this.model.objectName = objectName;
-	this.model.objectFields = objectFields;
-	this.model.fieldNames = fieldNames;
-
-	//Function to get records from Apex using View Filter Id
-	this.model.getRecords = function(objectName, fields, viewId){
-		Visualforce.remoting.Manager.invokeAction(
-	    'threevot_apps.sfafields.ListViewRecords',
-	    objectName,
-	    fields,
-	    viewId,
-	    handleResult,
-	    { buffer: false, escape: false, timeout: 30000 }
-		);
-
-		function handleResult(result, event){
-			that.model.destroyAll({ajax: false});
-			that.model.refresh(result);
-	 	} 
-	}
-
-	//Helper function switch to run query for lastviewed and for search by name
-	this.model.runquery  = function(type, value){
-		that.model.destroyAll({ ajax: false});
-		if(!type) return that.model.query("select " + that.fieldNames.join(",") + " from " + that.objectName + " order by LastViewedDate limit 10" );
-		var where = " where "+ that.model.getMainField() +" LIKE '%25" + value + "%25'"
-		that.model.query("select " + that.fieldNames.join(",") + " from " + that.objectName + where );
-	}
-
-	//Helper Function to try to figure the Main Label of the Object, when it's not Name
-	this.model.getMainField = function(){
-		if(that.model.mainField) return that.model.mainField;
-		if( that.fieldNames.indexOf("Name") > -1) return that.model.mainField= "Name";
-		for (var i = 0; i < that.fieldNames.length; i++) {
-			var fieldName = that.fieldNames[i];
-			if(fieldName != "id" && fieldName != "Id") return that.model.mainField= fieldName;
-		};
-		return that.model.mainField= "id";
-	}
-
-	return this.model;
-}
-
-
-
-module.exports= DynamicModel;
-
-},{"3vot-model":27}],12:[function(require,module,exports){
-//List View Model
-//Fetchs and Store list of List View 
-
 var _3Model = require("3vot-model/lib/ajaxless")
 
 ListView = _3Model.Model.setup("ListView", ["id","label"]);
+
 
 ListView.getViews = function(objectName){
 
@@ -748,11 +658,10 @@ ListView.getViews = function(objectName){
 
 }
 
-module.exports= ListView
-},{"3vot-model/lib/ajaxless":25}],13:[function(require,module,exports){
-//List View Result
-//Fetches and 
 
+module.exports= ListView
+
+},{"3vot-model/lib/ajaxless":24}],12:[function(require,module,exports){
 var _3Model = require("3vot-model/lib/ajaxless")
 
 ListViewResults = _3Model.Model.setup("ListViewResults", ["id","label"]);
@@ -780,41 +689,37 @@ ListViewResults.getRecords = function(objectName, fields, viewId){
 
 module.exports= ListViewResults
 
-},{"3vot-model/lib/ajaxless":25}],14:[function(require,module,exports){
-//Sf1Fields Main Object with Mappings for Profile and Org Mobile Fields pero Object
-
+},{"3vot-model/lib/ajaxless":24}],13:[function(require,module,exports){
 var _3Model = require("3vot-model")
 
 Sf1Fields = _3Model.Model.setup("threevot_apps__Sf1Fields__c", ["id","Name","threevot_apps__data__c","threevot_apps__profileid__c"]);
 
-//Standard Search
 Sf1Fields.fetch = function(profileId){
 	Sf1Fields.query("select id, name, profileid__c, data__c from threevot_apps__Sf1Fields__c where profileid__c = '" + profileId + "' or name = 'ORGANIZATION'" );
 }
 
-//Getter and JSON Parse for Data
-//To keep things in one place
 Sf1Fields.prototype.getData = function(){
 	return JSON.parse(this.threevot_apps__data__c);
 }
 
-//Helper Function to get list of Object for current Profile and Organization
 Sf1Fields.getObjects = function(){
 	var objects = []
 	var profile = Sf1Fields.findByAttribute("threevot_apps__profileid__c", _3vot.user_profile );
 	if(!profile) Sf1Fields.findByAttribute("Name", "ORGANIZATION" );
 	var data = profile.getData();
 	objects = 	Object.keys(data);
+	
 	return objects;
 }
 
-//Helper Function to get Fields by Object according to current profileId
+
 Sf1Fields.getFields = function(objectName){
 	var fields = [];
 	
 	var ownProfile = Sf1Fields.findByAttribute("threevot_apps__profileid__c", _3vot.user_profile);
 	var orgProfile = Sf1Fields.findByAttribute("Name", "ORGANIZATION");
 
+	 
 	var ownProfileFields = ownProfile.getData()[objectName];
 	var orgProfileFields = orgProfile.getData()[objectName];
 
@@ -836,28 +741,28 @@ Sf1Fields.fieldsToNames = function(fields){
 
 module.exports= Sf1Fields
 
-},{"3vot-model":27}],15:[function(require,module,exports){
+},{"3vot-model":26}],14:[function(require,module,exports){
 
-//Define App Container
 var appContainer = document.getElementById("app-container");
 
+var Sf1Fields = require("./code/models/sf1fields");
 
-//Define Application Controllers
+Sf1Fields.fetch( _3vot.user_profile );
+
+
+
 var ObjectController = require("./code/controllers/objects")
 var objectController = new ObjectController()
 
 var ListController = require("./code/controllers/list")
 var listController = new ListController(  );
 
-//Define Initialization Models
-var Sf1Fields = require("./code/models/sf1fields");
+appContainer.appendChild( objectController.el );
 
-//Define Global Bindings
-//This could be route based, but given simplicity...
 Sf1Fields.bind("OBJECT_SELECTED", function(objectName){
 	removeChilds();
 	listController.setupModel(objectName);
-	listController.model.runquery();
+	listController.query();
 	appContainer.appendChild(listController.el);
 })
 
@@ -866,22 +771,14 @@ Sf1Fields.bind("BACK_SELECTED", function(objectName){
 	appContainer.appendChild(objectController.el);
 })
 
-//Start Loading Data
-Sf1Fields.fetch( _3vot.user_profile );
 
-//Render Application Initial State
-appContainer.appendChild( objectController.el );
-
-
-//Helper Function Logic for Container
-//Todo make animations here
 function removeChilds(){
 	while (appContainer.firstChild) {
     appContainer.removeChild(appContainer.firstChild);
 	}	
 }
 
-},{"./code/controllers/list":1,"./code/controllers/objects":8,"./code/models/sf1fields":14}],16:[function(require,module,exports){
+},{"./code/controllers/list":2,"./code/controllers/objects":8,"./code/models/sf1fields":13}],15:[function(require,module,exports){
 (function() {
   var Action, Ajax, AjaxUtils, Collection, Extend, Include, Query, SalesforceRest, Singleton, View, ajax_request, _3Model,
     __slice = [].slice;
@@ -989,7 +886,7 @@ function removeChilds(){
 
 }).call(this);
 
-},{"./ajax_action":17,"./ajax_collection":18,"./ajax_query":19,"./ajax_request":20,"./ajax_salesforcerest":21,"./ajax_singleton":22,"./ajax_utils":23,"./ajax_view":24,"3vot-model":27}],17:[function(require,module,exports){
+},{"./ajax_action":16,"./ajax_collection":17,"./ajax_query":18,"./ajax_request":19,"./ajax_salesforcerest":20,"./ajax_singleton":21,"./ajax_utils":22,"./ajax_view":23,"3vot-model":26}],16:[function(require,module,exports){
 (function() {
   var Action, ajax_request,
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
@@ -1075,7 +972,7 @@ function removeChilds(){
 
 }).call(this);
 
-},{"./ajax_request":20}],18:[function(require,module,exports){
+},{"./ajax_request":19}],17:[function(require,module,exports){
 (function() {
   var AjaxUtils, Collection, ajax_request,
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
@@ -1175,7 +1072,7 @@ function removeChilds(){
 
 }).call(this);
 
-},{"./ajax_request":20,"./ajax_utils":23,"./vf_request":31}],19:[function(require,module,exports){
+},{"./ajax_request":19,"./ajax_utils":22,"./vf_request":30}],18:[function(require,module,exports){
 (function() {
   var AjaxUtils, Query, ajax_request, _3Model,
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
@@ -1313,7 +1210,7 @@ function removeChilds(){
 
 }).call(this);
 
-},{"./ajax_request":20,"./ajax_utils":23,"./vf_request":31,"3vot-model":27}],20:[function(require,module,exports){
+},{"./ajax_request":19,"./ajax_utils":22,"./vf_request":30,"3vot-model":26}],19:[function(require,module,exports){
 (function() {
   var AjaxRequest, AjaxUtils, superagent, _3Model;
 
@@ -1407,7 +1304,7 @@ function removeChilds(){
 
 }).call(this);
 
-},{"./ajax_utils":23,"3vot-model":27,"superagent":32}],21:[function(require,module,exports){
+},{"./ajax_utils":22,"3vot-model":26,"superagent":31}],20:[function(require,module,exports){
 (function() {
   var SalesforceRest, ajax_request,
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
@@ -1461,7 +1358,7 @@ function removeChilds(){
 
 }).call(this);
 
-},{"./ajax_request":20}],22:[function(require,module,exports){
+},{"./ajax_request":19}],21:[function(require,module,exports){
 (function() {
   var AjaxUtils, Singleton, ajax_request, _3Model,
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
@@ -1594,7 +1491,7 @@ function removeChilds(){
 
 }).call(this);
 
-},{"./ajax_request":20,"./ajax_utils":23,"./vf_request":31,"3vot-model":27}],23:[function(require,module,exports){
+},{"./ajax_request":19,"./ajax_utils":22,"./vf_request":30,"3vot-model":26}],22:[function(require,module,exports){
 (function() {
   var AjaxUtils, _3Model,
     __slice = [].slice;
@@ -1664,7 +1561,7 @@ function removeChilds(){
 
 }).call(this);
 
-},{"3vot-model":27}],24:[function(require,module,exports){
+},{"3vot-model":26}],23:[function(require,module,exports){
 (function() {
   var View, ajax_request,
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
@@ -1722,7 +1619,7 @@ function removeChilds(){
 
 }).call(this);
 
-},{"./ajax_request":20}],25:[function(require,module,exports){
+},{"./ajax_request":19}],24:[function(require,module,exports){
 (function() {
   var Events, Model, Module, _3Model;
 
@@ -1750,7 +1647,7 @@ function removeChilds(){
 
 }).call(this);
 
-},{"./events":26,"./model_ajaxless":29,"./module":30}],26:[function(require,module,exports){
+},{"./events":25,"./model_ajaxless":28,"./module":29}],25:[function(require,module,exports){
 (function() {
   var Events, trim,
     __slice = [].slice;
@@ -1953,7 +1850,7 @@ function removeChilds(){
 
 }).call(this);
 
-},{}],27:[function(require,module,exports){
+},{}],26:[function(require,module,exports){
 (function() {
   var Events, Model, Module, _3Model;
 
@@ -1981,7 +1878,7 @@ function removeChilds(){
 
 }).call(this);
 
-},{"./events":26,"./model":28,"./module":30}],28:[function(require,module,exports){
+},{"./events":25,"./model":27,"./module":29}],27:[function(require,module,exports){
 (function() {
   var Events, Model, Module, createObject, isArray, isBlank, makeArray,
     __hasProp = {}.hasOwnProperty,
@@ -2663,7 +2560,7 @@ function removeChilds(){
 
 }).call(this);
 
-},{"./ajax":16,"./events":26,"./module":30}],29:[function(require,module,exports){
+},{"./ajax":15,"./events":25,"./module":29}],28:[function(require,module,exports){
 (function() {
   var Events, Model, Module, createObject, isArray, isBlank, makeArray,
     __hasProp = {}.hasOwnProperty,
@@ -3339,7 +3236,7 @@ function removeChilds(){
 
 }).call(this);
 
-},{"./events":26,"./module":30}],30:[function(require,module,exports){
+},{"./events":25,"./module":29}],29:[function(require,module,exports){
 (function() {
   var Module, moduleKeywords,
     __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; },
@@ -3437,7 +3334,7 @@ function removeChilds(){
 
 }).call(this);
 
-},{}],31:[function(require,module,exports){
+},{}],30:[function(require,module,exports){
 (function() {
   var AjaxRequest, AjaxUtils, Model;
 
@@ -3550,7 +3447,7 @@ function removeChilds(){
 
 }).call(this);
 
-},{"./ajax_utils":23,"./model":28}],32:[function(require,module,exports){
+},{"./ajax_utils":22,"./model":27}],31:[function(require,module,exports){
 /**
  * Module dependencies.
  */
@@ -4546,7 +4443,7 @@ request.put = function(url, data, fn){
 
 module.exports = request;
 
-},{"emitter":33,"reduce":34}],33:[function(require,module,exports){
+},{"emitter":32,"reduce":33}],32:[function(require,module,exports){
 
 /**
  * Expose `Emitter`.
@@ -4704,7 +4601,7 @@ Emitter.prototype.hasListeners = function(event){
   return !! this.listeners(event).length;
 };
 
-},{}],34:[function(require,module,exports){
+},{}],33:[function(require,module,exports){
 
 /**
  * Reduce `arr` with `fn`.
@@ -4729,7 +4626,7 @@ module.exports = function(arr, fn, initial){
   
   return curr;
 };
-},{}],35:[function(require,module,exports){
+},{}],34:[function(require,module,exports){
 
 /**
  * Expose `parse`.
@@ -4838,4 +4735,4 @@ function parse(html, doc) {
   return fragment;
 }
 
-},{}]},{},[15])
+},{}]},{},[14])

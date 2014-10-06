@@ -1,18 +1,16 @@
-var domify = require('domify');
-
-//Models
-var Sf1Fields = require("../../models/sf1fields");
-
-//Vies
 var Layout = require("./view")
 var Item = require("./item")
 
-//Constructor
+var Sf1Fields = require("../../models/sf1fields");
+
+var domify = require('domify');
+
 var ObjectList = function(){
+
 	var that = this;
 	this.el = domify( Layout() );
 	
-	this.ul = this.el.querySelector("#list");
+	this.ul = this.el.querySelector("ul");
 	this.ul.onclick = function(e){
 		that.onItemClick(e);
 	}

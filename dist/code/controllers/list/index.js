@@ -1,80 +1,119 @@
-var domify = require('domify');
+var Layout = require("./view")
+var Item = require("./item")
+var ListViewItem = require("./listViewItem")
 
-//Models
+var Detail = require("./detail")
+var Loading = require("./loading")
+var NotFound = require("./notfound")
+
 var Sf1Fields = require("../../models/sf1fields");
 var ListView = require("../../models/listView");
-var DynamicModel = require("../../models/dynamicModel");
 var ListViewResults = require("../../models/listViewResults");
 
-//Views
-var Layout = require("./views/layout")
-var Item = require("./views/item")
-var ListViewItem = require("./views/listViewItem")
-var Detail = require("./views/detail")
-var Loading = require("./views/loading")
-var NotFound = require("./views/notfound")
+var domify = require('domify');
 
-//Constructor
+var _3Model = require("3vot-model")
+
 var ItemList = function(){
 	var that = this;
 	this.models = {}
+	
 	this.el = domify( Layout() );
 	
-	this.defineElements();
-	this.defineEventHandlers();
-	this.defineModelBindings();
+	this.ul = this.el.querySelector(".list-items");
+	this.ulListViews = this.el.querySelector(".list-views");
+	this.search = this.el.querySelector("input");
+	this.label = this.el.querySelector(".label");
+
+	this.ul.onclick = function(e){
+		that.onItemClick(e);
+	}
+
+	this.ulListViews.onclick = function(e){
+		that.onListViewClick(e);
+	}
+
+
+	this.search.onchange = function(e){
+		that.onSearch(e);
+	}
+
+	this.el.querySelector(".btn-back").onclick = function(){
+		Sf1Fields.trigger("BACK_SELECTED");
+	}
+
+	ListViewResults.bind("refresh",function(){
+		that.render( ListViewResults.all() );
+	})
+
+	ListView.bind("refresh", function(){
+		that.ulListViews.innerHTML = ""
+		var src = ""
+		var views = ListView.all();
+		for (var i = views.length - 1; i >= 0; i--) {
+			var view = views[i];
+			src += ListViewItem(view);
+		};
+		that.ulListViews.innerHTML = src;
+	})
 }
 
-//Defines the Elements to be used in controller
-ItemList.prototype.defineElements = function(){
-	this.txtSearch = this.el.querySelector("#txtSearch");
-	this.btnViews = this.el.querySelector("#btnViews");
-	this.backBtn= this.el.querySelector(".btn-back")
-
-	this.ul = this.el.querySelector("#itemList");
-	this.ulListViews = this.el.querySelector("#viewList");
-	this.itemListTitle = this.el.querySelector("#itemListTitle");
-	this.predefinedViews = this.el.querySelector("#predefinedViews");
-}
-
-//Define all Event Handlers
-//Favoring Global Handlers
-ItemList.prototype.defineEventHandlers = function(){
+ItemList.prototype.setupModel = function(objectName){
 	var that = this;
-	this.btnViews.onclick = function(e){ that.toggleViews(e); }
-	this.ul.onclick = function(e){ that.onItemClick(e); }
-	this.ulListViews.onclick = function(e){ that.onListViewClick(e); }
-	this.txtSearch.onchange = function(e){ that.onInputSearch(e); }
-	this.backBtn.onclick = function(){ Sf1Fields.trigger("BACK_SELECTED"); }
+
+	this.objectName = objectName;
+	this.objectFields  = Sf1Fields.getFields(this.objectName);
+	this.fieldNames = Sf1Fields.fieldsToNames(this.objectFields);
+
+	ListView.getViews(this.objectName);
+
+	this.label.innerHTML = this.objectName;
+
+	this.ul.innerHTML = Loading();
+	this.ulListViews.innerHTML = Loading();
+
+	if( this.models[this.objectName] ) return this.model = this.models[this.objectName];
+
+	this.model = _3Model.Model.setup(this.objectName, this.fieldNames.join(",")  );
+
+	this.model.objectName = this.objectName;
+	this.model.objectFields = this.objectFields;
+	this.model.fieldNames = this.fieldNames;
+
+	this.models[this.objectName] = this.model;
+
+	this.model.bind("refresh", function(){ that.render(); });
+
+	this.model.getRecords = function(objectName, fields, viewId){
+
+		Visualforce.remoting.Manager.invokeAction(
+	    'threevot_apps.sfafields.ListViewRecords',
+	    objectName,
+	    fields,
+	    viewId,
+	    handleResult,
+	    { buffer: false, escape: false, timeout: 30000 }
+		);
+
+		function handleResult(result, event){
+			that.model.destroyAll({ajax: false});
+			that.model.refresh(result);
+	 	} 
+	}
 }
 
-//Bind Models to Data Responders
-ItemList.prototype.defineModelBindings = function(){
-	var that = this;
-	ListViewResults.bind("refresh",function(){ that.render( ListViewResults.all() ); })
-	ListView.bind("refresh", function(){ that.renderViews(); });
-	ListView.bind("refresh", function(){ that.renderViews(); });
+ItemList.prototype.query = function(type, value){
+	this.model.destroyAll({ ajax: false});
+	if(!type) return this.model.query("select " + this.fieldNames.join(",") + " from " + this.objectName + " order by LastViewedDate limit 10" );
+	var where = " where Name LIKE '%25" + value + "%25'"
+	this.model.query("select " + this.fieldNames.join(",") + " from " + this.objectName + where );
 }
 
-//Renders Views
-// CALLED FROM ListView REFRESH event
-ItemList.prototype.renderViews = function(){
-	this.ulListViews.innerHTML = ""
-	var src = ""
-	var views = ListView.all(	);
-	for (var i = views.length - 1; i >= 0; i--) {
-		var view = views[i];
-		src += ListViewItem(view);
-	};
-	this.ulListViews.innerHTML = src;
-}
 
-//Renders Items
-// CALLED FROM this.model REFRESH event
 ItemList.prototype.render = function(results){
 	this.ul.innerHTML = "";
 	var items = results || this.model.all();
-	var mainField = this.model.getMainField();
+	var mainField = this.getMainField();
 	if(items.length == 0 ) return this.ul.innerHTML+= NotFound();
 
 	for (var i = items.length - 1; i >= 0; i--) {
@@ -84,94 +123,44 @@ ItemList.prototype.render = function(results){
 	};
 }
 
+ItemList.prototype.getMainField = function(){
+	if( this.fieldNames.indexOf("Name") > -1) return "Name";
+	for (var i = 0; i < this.fieldNames.length; i++) {
+		var fieldName = this.fieldNames[i];
+		if(fieldName != "id" && fieldName != "Id") return fieldName;
+	};
+	return "id";
+}
 
-//Global Click Handler for List
 ItemList.prototype.onItemClick = function(e){
 	var target  = e.target;
-	if(target.classList.contains("btn-view-id")) return this.onViewDetailClick(e);
+	if(target.classList.contains("btn-view-id")) return sforce.one.navigateToSObject( target.dataset.id );
 
-	//Loop DOM until the correct element is found, in case of child items
+	while(target.classList.contains("list-item") == false) target = target.parentNode;
 
-	while( target.classList.contains("list-item") == false ) target = target.parentNode;
-	
-	this.renderItem(target);
-}
+	// if( target.querySelector(".detail-view") ) return false;
 
-//Global Click Handler Helper for More Detail Click
-ItemList.prototype.onViewDetailClick = function(e){
-	return sforce.one.navigateToSObject( e.target.dataset.id );
-}
-
-//Global Click Handler Helper for Show more Deails
-ItemList.prototype.renderItem = function(itemElement){
-	var listElement = itemElement.parentNode;
-	
 	//Check and Toggle
-	var detailView = listElement.querySelector(".detail-view") 
-	if( detailView ) return listElement.removeChild(detailView);
-
-	//Render Detail View
-	var id = itemElement.dataset.id;
+	var detailView = target.querySelector(".detail-view"); 
+	if( detailView ) return target.removeChild(detailView);
+	
+	var id = e.target.dataset.id;
 	var item = this.model.find(id);
-	item.sf1fields_mainField = this.model.getMainField();
 	var renderValues = {model: this.model, item: item } ;
-	listElement.appendChild( domify( Detail( renderValues ) ) );
+
+	target.appendChild( domify( Detail( renderValues ) ) );
 }
 
-//Click Handlered for ListView List. The predefined lists
 ItemList.prototype.onListViewClick = function(e){
 	var target  = e.target;
 	var id = e.target.dataset.id;
-	this.ul.innerHTML = Loading();
-	this.itemListTitle.innerHTML = ListView.find(id).label;
-	this.toggleViews(null,true);
 	this.model.getRecords( this.objectName, this.fieldNames.join(","), id );
 }
 
-//ON Change Handler for Text Input, search.
-ItemList.prototype.onInputSearch = function(e){
+ItemList.prototype.onSearch = function(e){
 	this.ul.innerHTML = Loading();
 	var target  = e.target;
-	this.model.runquery( "name", target.value );
-}
-
-//Function and Click Handler for Header Toggle Button to show/hide List Views
-ItemList.prototype.toggleViews= function(e, hide){
-	if(hide== false){
-		this.btnViews.classList.remove("btn-primary")
-		this.predefinedViews.style.display = "none";	
-	}
-	else if( hide == true || e.target.classList.contains("btn-primary") ){
-			this.btnViews.classList.remove("btn-primary")
-			this.predefinedViews.style.display = "none";
-	}
-	else{
-		this.btnViews.classList.add("btn-primary")
-		this.predefinedViews.style.display = "block";
-	}
-}
-
-//Function used to Load a new Dynamic Model
-//It's a constructor in a way that re-shapes the whole UI
-ItemList.prototype.setupModel = function(objectName){
-	var that = this;
-
-	this.objectName = objectName;
-	this.objectFields  = Sf1Fields.getFields(this.objectName);
-	this.fieldNames = Sf1Fields.fieldsToNames(this.objectFields);
-
-	ListView.getViews(this.objectName);
-	this.itemListTitle.innerHTML = this.objectName;
-	this.ul.innerHTML = Loading();
-	this.ulListViews.innerHTML = Loading();
-
-	if( this.models[this.objectName] ) return this.model = this.models[this.objectName];
-
-	this.model = new DynamicModel(objectName,this.objectFields, this.fieldNames);
-
-	this.models[this.objectName] = this.model;
-
-	this.model.bind("refresh", function(){ that.render(); });
+	this.query( "name", target.value );
 }
 
 module.exports = ItemList;

@@ -1,9 +1,7 @@
-//List View Model
-//Fetchs and Store list of List View 
-
 var _3Model = require("3vot-model/lib/ajaxless")
 
 ListView = _3Model.Model.setup("ListView", ["id","label"]);
+
 
 ListView.getViews = function(objectName){
 
@@ -21,5 +19,6 @@ ListView.getViews = function(objectName){
 	 } 
 
 }
+
 
 module.exports= ListView
