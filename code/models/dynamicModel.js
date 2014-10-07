@@ -47,7 +47,9 @@ this.model.ajax.namespace = "threevot_apps."
 		that.model.destroyAll({ ignoreAjax: true});
 		if(!type) return that.model.query("select " + that.fieldNames.join(",") + " from " + that.objectName + " order by LastViewedDate limit 10" );
 		var where = " where "+ that.model.getMainField() +" LIKE '%" + value + "%'"
-		that.model.query("select " + that.fieldNames.join(",") + " from " + that.objectName + where );
+		that.model.query("select " + that.fieldNames.join(",") + " from " + that.objectName + where )
+		.then( function(){ console.log(arguments) } )
+		.fail( function(){ console.log(arguments) } )
 	}
 
 	//Helper Function to try to figure the Main Label of the Object, when it's not Name
@@ -63,7 +65,5 @@ this.model.ajax.namespace = "threevot_apps."
 
 	return this.model;
 }
-
-
 
 module.exports= DynamicModel;

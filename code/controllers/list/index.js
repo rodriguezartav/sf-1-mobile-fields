@@ -15,7 +15,6 @@ var domify = require('domify');
 var _3Model = require("3vot-model")
 var Ajax = require("3vot-model/lib/3vot-model-vfr");
 
-
 var ItemList = function(){
 	var that = this;
 	this.models = {}
@@ -35,7 +34,6 @@ var ItemList = function(){
 		that.onListViewClick(e);
 	}
 
-
 	this.search.onchange = function(e){
 		that.onSearch(e);
 	}
@@ -49,6 +47,7 @@ var ItemList = function(){
 	})
 
 	ListView.bind("refresh", function(){
+
 		that.ulListViews.innerHTML = ""
 		var src = ""
 		var views = ListView.all();
@@ -77,8 +76,8 @@ ItemList.prototype.setupModel = function(objectName){
 	if( this.models[this.objectName] ) return this.model = this.models[this.objectName];
 
 	this.model = _3Model.setup(this.objectName, this.fieldNames.join(",")  );
-this.model.ajax = Ajax;
-this.model.ajax.namespace = "threevot_apps."
+	this.model.ajax = Ajax;
+	this.model.ajax.namespace = "threevot_apps."
 
 	this.model.objectName = this.objectName;
 	this.model.objectFields = this.objectFields;
@@ -108,9 +107,11 @@ this.model.ajax.namespace = "threevot_apps."
 
 ItemList.prototype.query = function(type, value){
 	this.model.destroyAll({ ignoreAjax: true});
-	if(!type) return this.model.query("select " + this.fieldNames.join(",") + " from " + this.objectName + " order by LastViewedDate limit 10" );
+	var that = this;
+	if(!type) return this.model.query("select " + this.fieldNames.join(",") + " from " + this.objectName + " order by LastModifiedDate limit 10" )
+		.fail(function(){ that.model.refresh([]); console.error(arguments[0].message);  })
 	var where = " where Name LIKE '%" + value + "%'"
-	this.model.query("select " + this.fieldNames.join(",") + " from " + this.objectName + where );
+	this.model.query("select " + this.fieldNames.join(",") + " from " + this.objectName + where )
 }
 
 

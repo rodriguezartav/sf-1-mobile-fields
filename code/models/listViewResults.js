@@ -4,7 +4,6 @@ ListViewResults = _3Model.setup("ListViewResults", ["id","label"]);
 
 
 ListViewResults.getRecords = function(objectName, fields, viewId){
-
 		Visualforce.remoting.Manager.invokeAction(
 	    'threevot_apps.sfafields.ListViewRecords',
 	    objectName,

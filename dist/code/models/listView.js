@@ -10,15 +10,16 @@ ListView.getViews = function(objectName){
 	    objectName,
 	    handleResult,
 	    { buffer: false, escape: false, timeout: 30000 }
-	);
+		);
 
 	function handleResult(result, event){
+
 		ListView.destroyAll();
+		if(!result || event.status==false) return ListView.refresh([]);
 		var parsedResults = JSON.parse(result).views
 	 	ListView.refresh(parsedResults);
 	 } 
 
 }
-
 
 module.exports= ListView
