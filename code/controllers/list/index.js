@@ -146,7 +146,12 @@ ItemList.prototype.onItemClick = function(e){
 
 	//Check and Toggle
 	var detailView = target.querySelector(".detail-view"); 
-	if( detailView ) return target.removeChild(detailView);
+	if( detailView ){
+		target.querySelector(".icon").classList.remove("icon-arrow-up");
+		return target.removeChild(detailView);
+	}else{
+		target.querySelector(".icon").classList.add("icon-arrow-up")
+	}
 	
 	var id = e.target.dataset.id;
 	var item = this.model.find(id);

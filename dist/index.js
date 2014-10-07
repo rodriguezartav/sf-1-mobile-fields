@@ -112,10 +112,14 @@ module.exports = function(__obj) {
           __out.push(__sanitize(this.item[key]));
           __out.push('</div>\n\t\t\t\t');
         }
-        __out.push('\n\t\t</li>\n\n\t');
+        __out.push('\n\t\t</li>\n\n\t\t\n\n\t');
       }
     
-      __out.push('\n\n\t</ul>\n\n</div>');
+      __out.push('\n\t</ul>\n\t<div class="detail-view-buttons">\n\t\t<a class="sf1button SFBlue btn-view-id" data-id=');
+    
+      __out.push(__sanitize(this.item["id"]));
+    
+      __out.push('> View in SF1 <span class="icon icon-arrow-right-white pull-right"></span></a>\n\t</div>\n\n</div>');
     
     }).call(this);
     
@@ -272,7 +276,12 @@ ItemList.prototype.onItemClick = function(e){
 
 	//Check and Toggle
 	var detailView = target.querySelector(".detail-view"); 
-	if( detailView ) return target.removeChild(detailView);
+	if( detailView ){
+		target.querySelector(".icon").classList.remove("icon-arrow-up");
+		return target.removeChild(detailView);
+	}else{
+		target.querySelector(".icon").classList.add("icon-arrow-up")
+	}
 	
 	var id = e.target.dataset.id;
 	var item = this.model.find(id);

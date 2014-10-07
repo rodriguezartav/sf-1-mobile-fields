@@ -13,8 +13,12 @@
 				<% end %>
 		</li>
 
-	<% end %>
+		
 
+	<% end %>
 	</ul>
+	<div class="detail-view-buttons">
+		<a class="sf1button SFBlue btn-view-id" data-id=<%= @item["id"] %>> View in SF1 <span class="icon icon-arrow-right-white pull-right"></span></a>
+	</div>
 
 </div>
