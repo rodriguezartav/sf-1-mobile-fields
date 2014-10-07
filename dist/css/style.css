@@ -72,7 +72,8 @@ box-sizing: border-box;
 }
 ._3vot .header .btn-back{
 	text-align: center;
-	padding: .8em 1em;
+	padding: .7em;
+	margin: 0;
 }
 
 ._3vot .header .btn-options{
