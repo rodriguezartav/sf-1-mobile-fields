@@ -1855,7 +1855,6 @@ var Model = (function() {
   };
 
   Model.prototype.destroy = function(options) {
-    console.log(options)
     if (options == null) options = {};
     if (options.clear == null) options.clear = true;
     var _this = this;
