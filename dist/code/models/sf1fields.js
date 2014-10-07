@@ -33,11 +33,14 @@ Sf1Fields.getFields = function(objectName){
 	var orgProfile = Sf1Fields.findByAttribute("Name", "ORGANIZATION");
 
 	 
-	var ownProfileFields = ownProfile.getData()[objectName];
-	var orgProfileFields = orgProfile.getData()[objectName];
+	var ownProfileFields  = []
+	var orgProfileFields = []
 
-	if(ownProfileFields) fields = fields.concat(ownProfileFields);
-	else if(orgProfileFields) fields = fields.concat(orgProfileFields);
+	if(ownProfile) orgProfile.getData()[objectName];
+	if(orgProfile) ownProfile.getData()[objectName];
+
+	fields = fields.concat(ownProfileFields);
+	fields = fields.concat(orgProfileFields);
 
 	return fields;
 	
