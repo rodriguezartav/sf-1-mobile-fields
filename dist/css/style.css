@@ -102,11 +102,11 @@ box-sizing: border-box;
 }
 
 .sf1button, .list-group-item.sf1button {
-font-size: 1.4em;
+font-size: 1.6em;
 font-weight: 400;
 color: #44596c;
 text-shadow: none;
-margin: .2em 0;
+margin: .5em 0;
 padding: .5em 1em;
 border: 1px solid #bbc0c4;
 border-radius: 5px;
@@ -180,13 +180,28 @@ border-bottom:none;
 
 ._3vot .sf1NestedList li .title {
 	font-weight: 400;
-	font-size: 1.2em;
+	font-size: 1em;
 	color: #3c3d3e;
 }
 ._3vot .sf1NestedList li .value {
 	font-size: .8em;
 	display: inline-block;
 }
+
+/*Controller List - Detail*/
+._3vot .detail-view-buttons{
+
+}
+._3vot .detail-view-buttons .sf1button{
+	display: inline-block;
+	display: inline-block;
+	font-size: 1em;
+	width: 100%;
+	text-align: center;
+}
+/**/
+
+
 ._3vot .form-control {
 	color: #3c3d3e;
 	padding: 1.4em;
@@ -223,6 +238,9 @@ border-bottom:none;
 }
 .icon-arrow-right {
 	background-image: url(../images/icon-arrow-right.png);
+}
+.icon-arrow-right-white{
+	background-image: url(../images/icon-arrow-right-white.png);
 }
 .icon-arrow-down {
 	background-image: url(../images/icon-arrow-down.png);
