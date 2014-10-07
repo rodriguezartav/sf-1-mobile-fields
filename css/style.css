@@ -39,9 +39,36 @@ box-sizing: border-box;
   overflow-x: hidden;
 }
 
+._3vot .app-title{
+	background-color: #2a94d6;
+	color: #fff;
+	margin: 0 0 1em;
+}
+._3vot .app-title h1 {
+	font-weight: 300;
+	margin: .2em .5em .5em;
+	display: block;
+}
+._3vot .brand {
+	background-color: rgba(0,0,0,.05);
+}
+._3vot .app-title .icon-by3vot{
+	height: 31px;
+	width: 96px;
+	background-repeat: no-repeat;
+	-webkit-background-size: auto 100%;
+	background-size: auto 100%;
+	background-position: center center;
+	display: inline-block;
+	vertical-align: middle;
+	opacity: .8;
+	margin: 1em 1em;
+}
+
 .header{
-	padding: 0 0 1em;
-	height: 5em;
+	padding: 1em 0;
+	margin: 0 0 1em;
+	background-color: #2a94d6;
 }
 .header .btn-back{
 	text-align: center;
@@ -61,9 +88,9 @@ box-sizing: border-box;
 }
 
 .list-view{
-	max-width: 768px;
+	/*max-width: 768px;*/
 	margin: auto;
-	padding: 1em;	
+	/*padding: 1em;*/	
 }
 
 ._3vot .list-views .list-view-item {
@@ -248,7 +275,9 @@ border-bottom:none;
 .icon-arrow-up {
 	background-image: url(../images/icon-arrow-up.png);
 }
-
+.icon-by3vot{
+	background-image: url(../images/by3vot.png);
+}
 
 .footer{
 	background-color: #e8eaeb;

@@ -555,7 +555,7 @@ module.exports = function(__obj) {
   }
   (function() {
     (function() {
-      __out.push('<div class="list-view sliding-view">\n\t\n\t<div class="header">\n\t\t<a class="btn-back sf1button SFBlue col-md-2 col-sm-2 col-xs-2"><span class="icon icon-back"></span></a>\n\t\t<div class="form-wrapper col-sm-10 col-md-10 col-xs-10"><input class="form-control " type="text" placeholder="Search for..."/></div>\n\t\t<!-- <a class="btn-options sf1button">|||</a> -->\n\t</div>\n\t<div class="clearfix"></div>\n\n\t<div class="list">\n\t\t<label> <span class="icon icon-sort"></span> Lists</label>\n\t\t<ul class="list-group list-views col-md-12 col-sm-12 col-xs-12"></ul>\n\t\t<div class="clearfix"></div>\n\t</div>\n\n\t\t\n\t<div class="list ">\n\t\t<label class="label"></label>\n\t\t<ul class="list-group list-items"></ul>\n\t</div>\n\n\t<div class="footer">\n\t\t<div class="logo"></div>\n\t</div>\n\n</div>');
+      __out.push('<div class="list-view sliding-view">\n\t<div class="header">\n\t\t<div class="container">\n\t\t\t<a class="btn-back sf1button SFBlue col-md-2 col-sm-2 col-xs-2"><span class="icon icon-back"></span></a>\n\t\t<div class="form-wrapper col-sm-10 col-md-10 col-xs-10"><input class="form-control " type="text" placeholder="Search for..."/>\n\t\t</div>\n\t\t</div>\n\t</div>\n\t<div class="container">\n\t\t<!-- <a class="btn-options sf1button">|||</a> -->\n\t\n\t\t<div class="clearfix"></div>\n\t\n\t\t<div class="list">\n\t\t\t<label> <span class="icon icon-sort"></span> Lists</label>\n\t\t\t<ul class="list-group list-views col-md-12 col-sm-12 col-xs-12"></ul>\n\t\t\t<div class="clearfix"></div>\n\t\t</div>\n\t\n\t\t\t\n\t\t<div class="list ">\n\t\t\t<label class="label"></label>\n\t\t\t<ul class="list-group list-items"></ul>\n\t\t</div>\n\t\n\t\t<div class="footer">\n\t\t\t<div class="logo"></div>\n\t\t</div>\n\t</div><!--container-->\n</div>');
     
     }).call(this);
     
@@ -639,7 +639,7 @@ module.exports = function(__obj) {
   }
   (function() {
     (function() {
-      __out.push('<div class="sf1button large" data-name="');
+      __out.push('<label for="">Field Name</label>\n<div class="sf1button large" data-name="');
     
       __out.push(__sanitize(this));
     
@@ -695,7 +695,7 @@ module.exports = function(__obj) {
   }
   (function() {
     (function() {
-      __out.push('<div class="list-view sliding-view">\n\t<div class="">\n\t\t<ul class="list-group col-md-12 col-sm-12 col-xs-12"></ul>\n\t</div>\n</div>');
+      __out.push('<div class="list-view sliding-view">\n\n\t<div class="app-title">\n\t\t<div class="container">\n\t\t\t<h1>Salesforce1 Fields</h1>\n\t\t</div>\n\t\t<div class="brand text-right">\n\t\t\t<div class="container">\n\t\t\t\t<span class="icon-by3vot"></span>\n\t\t\t</div>\n\t\t</div>\n\t</div>\n\t<div class="container">\n\t\t<ul class="list-group col-md-12 col-sm-12 col-xs-12"></ul>\n\t</div>\n</div>');
     
     }).call(this);
     
