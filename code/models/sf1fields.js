@@ -34,14 +34,13 @@ Sf1Fields.getFields = function(objectName){
 
 	 
 	var ownProfileFields  = []
-	var orgProfileFields = []
+	var orgProfileFields = orgProfile.getData()[objectName];
 
 	if(ownProfile) ownProfile.getData()[objectName];
-	if(orgProfile) orgProfile.getData()[objectName];
-
+	
 	fields = fields.concat(ownProfileFields);
 	fields = fields.concat(orgProfileFields);
-
+	console.log(fields)
 	return fields;
 	
 }

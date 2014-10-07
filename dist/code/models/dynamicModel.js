@@ -46,7 +46,7 @@ this.model.ajax.namespace = "threevot_apps."
 	this.model.runquery  = function(type, value){
 		that.model.destroyAll({ ajax: false});
 		if(!type) return that.model.query("select " + that.fieldNames.join(",") + " from " + that.objectName + " order by LastViewedDate limit 10" );
-		var where = " where "+ that.model.getMainField() +" LIKE '%25" + value + "%25'"
+		var where = " where "+ that.model.getMainField() +" LIKE '%" + value + "%'"
 		that.model.query("select " + that.fieldNames.join(",") + " from " + that.objectName + where );
 	}
 
