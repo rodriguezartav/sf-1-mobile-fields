@@ -69,7 +69,7 @@ box-sizing: border-box;
 	padding: 1em 0;
 	margin: 0 0 1em;
 	background-color: #2a94d6;
-}
+}	
 ._3vot .header .btn-back{
 	text-align: center;
 	padding: .7em;
@@ -223,6 +223,7 @@ border-bottom:none;
 	text-align: center;
 }
 /**/
+
 
 
 ._3vot .form-control {
