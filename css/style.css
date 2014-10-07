@@ -88,7 +88,7 @@ box-sizing: border-box;
 }
 
 .list-view{
-	max-width: 768px;
+	/*max-width: 768px;*/
 	margin: auto;
 	/*padding: 1em;*/	
 }
