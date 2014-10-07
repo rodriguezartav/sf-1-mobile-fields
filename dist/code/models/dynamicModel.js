@@ -3,6 +3,8 @@
 
 
 var _3Model = require("3vot-model")
+var Ajax = require("3vot-model/lib/3vot-model-vfr");
+
 
 //Receives a Name that must match SFDC API, a list of object fields and a list of fields
 function DynamicModel(objectName, objectFields, fieldNames){
@@ -13,7 +15,11 @@ function DynamicModel(objectName, objectFields, fieldNames){
 	this.fieldNames = fieldNames;
 	
 	//Create Model Dynamically
-	this.model = _3Model.Model.setup(this.objectName, this.fieldNames.join(",")  );
+	this.model = _3Model.setup(this.objectName, this.fieldNames.join(",")  );
+this.model.ajax = Ajax;
+this.model.ajax.namespace = "threevot_apps."
+
+
 
 	this.model.objectName = objectName;
 	this.model.objectFields = objectFields;

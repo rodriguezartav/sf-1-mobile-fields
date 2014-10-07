@@ -1,6 +1,6 @@
-var _3Model = require("3vot-model/lib/ajaxless")
+var _3Model = require("3vot-model")
 
-ListViewResults = _3Model.Model.setup("ListViewResults", ["id","label"]);
+ListViewResults = _3Model.setup("ListViewResults", ["id","label"]);
 
 
 ListViewResults.getRecords = function(objectName, fields, viewId){

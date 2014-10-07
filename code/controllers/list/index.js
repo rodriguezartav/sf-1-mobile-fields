@@ -13,6 +13,8 @@ var ListViewResults = require("../../models/listViewResults");
 var domify = require('domify');
 
 var _3Model = require("3vot-model")
+var Ajax = require("3vot-model/lib/3vot-model-vfr");
+
 
 var ItemList = function(){
 	var that = this;
@@ -74,7 +76,9 @@ ItemList.prototype.setupModel = function(objectName){
 
 	if( this.models[this.objectName] ) return this.model = this.models[this.objectName];
 
-	this.model = _3Model.Model.setup(this.objectName, this.fieldNames.join(",")  );
+	this.model = _3Model.setup(this.objectName, this.fieldNames.join(",")  );
+this.model.ajax = Ajax;
+this.model.ajax.namespace = "threevot_apps."
 
 	this.model.objectName = this.objectName;
 	this.model.objectFields = this.objectFields;

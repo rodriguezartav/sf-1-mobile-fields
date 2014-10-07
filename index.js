@@ -5,8 +5,6 @@ var Sf1Fields = require("./code/models/sf1fields");
 
 Sf1Fields.fetch( _3vot.user_profile );
 
-
-
 var ObjectController = require("./code/controllers/objects")
 var objectController = new ObjectController()
 
