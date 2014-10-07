@@ -230,16 +230,16 @@ this.model.ajax.namespace = "threevot_apps."
 		);
 
 		function handleResult(result, event){
-			that.model.destroyAll({ajax: false});
+			that.model.destroyAll({ignoreAjax: true});
 			that.model.refresh(result);
 	 	} 
 	}
 }
 
 ItemList.prototype.query = function(type, value){
-	this.model.destroyAll({ ajax: false});
+	this.model.destroyAll({ ignoreAjax: true});
 	if(!type) return this.model.query("select " + this.fieldNames.join(",") + " from " + this.objectName + " order by LastViewedDate limit 10" );
-	var where = " where Name LIKE '%25" + value + "%25'"
+	var where = " where Name LIKE '%" + value + "%'"
 	this.model.query("select " + this.fieldNames.join(",") + " from " + this.objectName + where );
 }
 
@@ -791,7 +791,6 @@ Sf1Fields.getFields = function(objectName){
 	
 	var ownProfile = Sf1Fields.findByAttribute("threevot_apps__profileid__c", _3vot.user_profile);
 	var orgProfile = Sf1Fields.findByAttribute("Name", "ORGANIZATION");
-
 	 
 	var ownProfileFields  = []
 	var orgProfileFields = orgProfile.getData()[objectName];
@@ -800,9 +799,7 @@ Sf1Fields.getFields = function(objectName){
 	
 	fields = fields.concat(ownProfileFields);
 	fields = fields.concat(orgProfileFields);
-	console.log(fields)
-	return fields;
-	
+	return fields;	
 }
 
 Sf1Fields.fieldsToNames = function(fields){
@@ -1858,6 +1855,7 @@ var Model = (function() {
   };
 
   Model.prototype.destroy = function(options) {
+    console.log(options)
     if (options == null) options = {};
     if (options.clear == null) options.clear = true;
     var _this = this;

@@ -31,7 +31,6 @@ Sf1Fields.getFields = function(objectName){
 	
 	var ownProfile = Sf1Fields.findByAttribute("threevot_apps__profileid__c", _3vot.user_profile);
 	var orgProfile = Sf1Fields.findByAttribute("Name", "ORGANIZATION");
-
 	 
 	var ownProfileFields  = []
 	var orgProfileFields = orgProfile.getData()[objectName];
@@ -40,9 +39,7 @@ Sf1Fields.getFields = function(objectName){
 	
 	fields = fields.concat(ownProfileFields);
 	fields = fields.concat(orgProfileFields);
-	console.log(fields)
-	return fields;
-	
+	return fields;	
 }
 
 Sf1Fields.fieldsToNames = function(fields){

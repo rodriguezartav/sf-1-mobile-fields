@@ -37,14 +37,14 @@ this.model.ajax.namespace = "threevot_apps."
 		);
 
 		function handleResult(result, event){
-			that.model.destroyAll({ajax: false});
+			that.model.destroyAll({ignoreAjax: true});
 			that.model.refresh(result);
 	 	} 
 	}
 
 	//Helper function switch to run query for lastviewed and for search by name
 	this.model.runquery  = function(type, value){
-		that.model.destroyAll({ ajax: false});
+		that.model.destroyAll({ ignoreAjax: true});
 		if(!type) return that.model.query("select " + that.fieldNames.join(",") + " from " + that.objectName + " order by LastViewedDate limit 10" );
 		var where = " where "+ that.model.getMainField() +" LIKE '%" + value + "%'"
 		that.model.query("select " + that.fieldNames.join(",") + " from " + that.objectName + where );

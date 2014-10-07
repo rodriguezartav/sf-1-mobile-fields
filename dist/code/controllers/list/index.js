@@ -100,16 +100,16 @@ this.model.ajax.namespace = "threevot_apps."
 		);
 
 		function handleResult(result, event){
-			that.model.destroyAll({ajax: false});
+			that.model.destroyAll({ignoreAjax: true});
 			that.model.refresh(result);
 	 	} 
 	}
 }
 
 ItemList.prototype.query = function(type, value){
-	this.model.destroyAll({ ajax: false});
+	this.model.destroyAll({ ignoreAjax: true});
 	if(!type) return this.model.query("select " + this.fieldNames.join(",") + " from " + this.objectName + " order by LastViewedDate limit 10" );
-	var where = " where Name LIKE '%25" + value + "%25'"
+	var where = " where Name LIKE '%" + value + "%'"
 	this.model.query("select " + this.fieldNames.join(",") + " from " + this.objectName + where );
 }
 
